@@ -1,10 +1,10 @@
-﻿/*
+/*
  * Unity VSCode Support
  *
  * Seamless support for Microsoft Visual Studio Code in Unity
  *
  * Version:
- *   2.3
+ *   2.41
  *
  * Authors:
  *   Matthew Davey <matthew.davey@dotbunny.com>
@@ -19,12 +19,13 @@ namespace dotBunny.Unity
     using UnityEditor;
     using UnityEngine;
 
+    [InitializeOnLoad]
     public static class VSCode
     {
         /// <summary>
         /// Current Version Number
         /// </summary>
-        public const float Version = 2.3f;
+        public const float Version = 2.41f;
 
         /// <summary>
         /// Current Version Code
@@ -197,6 +198,7 @@ namespace dotBunny.Unity
             if (Enabled)
             {
                 UpdateUnityPreferences(true);
+                UpdateLaunchFile();
 
                 // Add Update Check
                 DateTime targetDate = LastUpdate.AddDays(UpdateTime);
@@ -205,9 +207,6 @@ namespace dotBunny.Unity
                     CheckForUpdate();
                 }
             }
-
-
-
 
             //System.AppDomain.CurrentDomain.DomainUnload += System_AppDomain_CurrentDomain_DomainUnload;
         }
@@ -241,7 +240,6 @@ namespace dotBunny.Unity
         /// </summary>
         public static void UpdateSolution()
         {
-
             // No need to process if we are not enabled
             if (!VSCode.Enabled)
             {
@@ -341,6 +339,14 @@ namespace dotBunny.Unity
             // Set the last update time
             LastUpdate = DateTime.Now;
 
+            // Fix for oddity in downlo
+            if ( fileContent.Substring(0, 2) != "/*" ) {
+                int startPosition = fileContent.IndexOf("/*", StringComparison.CurrentCultureIgnoreCase);
+                
+                // Jump over junk characters
+                fileContent = fileContent.Substring(startPosition);
+            }
+
             string[] fileExploded = fileContent.Split('\n');
             if (fileExploded.Length > 7)
             {
@@ -350,6 +356,7 @@ namespace dotBunny.Unity
                     GitHubVersion = github;
                 }
 
+
                 if (github > Version)
                 {
                     var GUIDs = AssetDatabase.FindAssets("t:Script VSCode");
@@ -358,6 +365,11 @@ namespace dotBunny.Unity
 
                     if (EditorUtility.DisplayDialog("VSCode Update", "A newer version of the VSCode plugin is available, would you like to update your version?", "Yes", "No"))
                     {
+                        // Always make sure the file is writable
+                        System.IO.FileInfo fileInfo = new System.IO.FileInfo(path);
+                        fileInfo.IsReadOnly = false;
+                        
+                        // Write update file
                         File.WriteAllText(path, fileContent);
                     }
                 }
@@ -651,27 +663,9 @@ namespace dotBunny.Unity
         /// </summary>
         static void OnPlaymodeStateChanged()
         {
-            if (VSCode.Enabled && VSCode.WriteLaunchFile && UnityEngine.Application.isPlaying && EditorApplication.isPlayingOrWillChangePlaymode)
+            if (UnityEngine.Application.isPlaying && EditorApplication.isPlayingOrWillChangePlaymode)
             {
-                int port = GetDebugPort();
-                if (port > -1)
-                {
-                    if (!Directory.Exists(VSCode.SettingsFolder))
-                        System.IO.Directory.CreateDirectory(VSCode.SettingsFolder);
-                    UpdateLaunchFile(port);
-
-                    if (VSCode.Debug)
-                    {
-                        UnityEngine.Debug.Log("[VSCode] Debug Port Found (" + port + ")");
-                    }
-                }
-                else
-                {
-                    if (VSCode.Debug)
-                    {
-                        UnityEngine.Debug.LogWarning("[VSCode] Unable to determine debug port.");
-                    }
-                }
+                UpdateLaunchFile();
             }
         }
 
@@ -684,7 +678,6 @@ namespace dotBunny.Unity
             EditorApplication.playmodeStateChanged -= OnPlaymodeStateChanged;
             EditorApplication.playmodeStateChanged += OnPlaymodeStateChanged;
         }
-
 
         /// <summary>
         /// Remove extra/erroneous lines from a file.
@@ -810,11 +803,33 @@ namespace dotBunny.Unity
         /// <summary>
         /// Update Visual Studio Code Launch file
         /// </summary>
-        static void UpdateLaunchFile(int port)
+        static void UpdateLaunchFile()
         {
-            // Write out proper formatted JSON (hence no more SimpleJSON here)
-            string fileContent = "{\n\t\"version\":\"0.2.0\",\n\t\"configurations\":[ \n\t\t{\n\t\t\t\"name\":\"Unity\",\n\t\t\t\"type\":\"mono\",\n\t\t\t\"request\":\"attach\",\n\t\t\t\"address\":\"localhost\",\n\t\t\t\"port\":" + port + "\n\t\t}\n\t]\n}";
-            File.WriteAllText(VSCode.LaunchPath, fileContent);
+            if (VSCode.Enabled && VSCode.WriteLaunchFile)
+            {
+                int port = GetDebugPort();
+                if (port > -1)
+                {
+                    if (!Directory.Exists(VSCode.SettingsFolder))
+                        System.IO.Directory.CreateDirectory(VSCode.SettingsFolder);
+
+                    // Write out proper formatted JSON (hence no more SimpleJSON here)
+                    string fileContent = "{\n\t\"version\":\"0.2.0\",\n\t\"configurations\":[ \n\t\t{\n\t\t\t\"name\":\"Unity\",\n\t\t\t\"type\":\"mono\",\n\t\t\t\"request\":\"attach\",\n\t\t\t\"address\":\"localhost\",\n\t\t\t\"port\":" + port + "\n\t\t}\n\t]\n}";
+                    File.WriteAllText(VSCode.LaunchPath, fileContent);
+
+                    if (VSCode.Debug)
+                    {
+                        UnityEngine.Debug.Log("[VSCode] Debug Port Found (" + port + ")");
+                    }
+                }
+                else
+                {
+                    if (VSCode.Debug)
+                    {
+                        UnityEngine.Debug.LogWarning("[VSCode] Unable to determine debug port.");
+                    }
+                }
+            }
         }
 
         /// <summary>
