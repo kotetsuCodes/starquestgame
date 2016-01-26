@@ -7,6 +7,8 @@ public class StarParticleSystem : MonoBehaviour {
     public int maxStarSystemDistance = 10;
     public int minStarParticleSize = 4;
     public int maxStarParticleSize = 128;
+    public int maxStarCount = 1000;
+    public int starRadius = 1000;
 
     private ParticleSystem ps;
 
@@ -27,19 +29,19 @@ public class StarParticleSystem : MonoBehaviour {
         sw.Start();
         Debug.Log(string.Format("Starting star generation at: {0}", sw.ElapsedMilliseconds));
 
-        for(var i = 0; i < 1000; i++)
+        for(var i = 0; i < maxStarCount; i++)
         {
             Color32 blueStar = new Color32(System.Convert.ToByte(Random.Range(0, 60)), System.Convert.ToByte(Random.Range(200, 255)), 255, 255);
             Color32 yellowStar = new Color32(255, 255, System.Convert.ToByte(Random.Range(0, 255)), 255);
             Color32 orangeStar = new Color32(255, System.Convert.ToByte(Random.Range(140,200)),0,255);
             
-            int[] randomCoords = getRandomXY(1000);
+            int[] randomCoords = getRandomXY(starRadius);
 
             int randomCoordHash = (randomCoords[0] + randomCoords[1]).GetHashCode();
             
             while(GameManager.instance.usedStarSystemCoords.Contains(randomCoordHash))
             {
-                randomCoords = getRandomXY(1000);
+                randomCoords = getRandomXY(starRadius);
                 randomCoordHash = (randomCoords[0] + randomCoords[1]).GetHashCode();
                 //Debug.Log("In while loop: " + randomXcoord + "," + randomYcoord);
             }
