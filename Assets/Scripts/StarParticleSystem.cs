@@ -10,11 +10,11 @@ public class StarParticleSystem : MonoBehaviour {
     public int maxStarCount = 1000;
     public int starRadius = 1000;
 
-    private ParticleSystem ps;
+    public ParticleSystem StarSystems;
 
     // Use this for initialization
     void Start () {
-        ps = GetComponent<ParticleSystem>();
+        StarSystems = GetComponent<ParticleSystem>();
         generateStarSystemParticles();
     }
     
@@ -39,34 +39,31 @@ public class StarParticleSystem : MonoBehaviour {
 
             int randomCoordHash = (randomCoords[0] + randomCoords[1]).GetHashCode();
             
-            while(GameManager.instance.usedStarSystemCoords.Contains(randomCoordHash))
+            while(GameManager.instance.UsedStarSystemCoords.Contains(randomCoordHash))
             {
                 randomCoords = getRandomXY(starRadius);
                 randomCoordHash = (randomCoords[0] + randomCoords[1]).GetHashCode();
                 //Debug.Log("In while loop: " + randomXcoord + "," + randomYcoord);
             }
-                GameManager.instance.usedStarSystemCoords.Add(randomCoordHash);
+                GameManager.instance.UsedStarSystemCoords.Add(randomCoordHash);
                 
-            GameManager.instance.starSystemParticles[i].position = new Vector3(randomCoords[0], randomCoords[1], 0.0f);
+            GameManager.instance.StarSystemParticles[i].position = new Vector3(randomCoords[0], randomCoords[1], 0.0f);
             
-            int randomStarColor = Random.Range(0, 2);
+            int randomStarColor = Random.Range(1, 300);
             
-            switch(randomStarColor){
-                case 0: GameManager.instance.starSystemParticles[i].startColor = blueStar;
-                    break;
-                case 1: GameManager.instance.starSystemParticles[i].startColor = yellowStar;
-                    break;
-                case 2: GameManager.instance.starSystemParticles[i].startColor = orangeStar;
-                    break;
-            }
+            if(randomStarColor < 100)
+                GameManager.instance.StarSystemParticles[i].startColor = blueStar;
+            else if(randomStarColor > 100 && randomStarColor < 200)
+                GameManager.instance.StarSystemParticles[i].startColor = orangeStar;
+            else
+                GameManager.instance.StarSystemParticles[i].startColor = yellowStar;
             
-            
-            GameManager.instance.starSystemParticles[i].startSize = Random.Range(minStarParticleSize,maxStarParticleSize);
+            GameManager.instance.StarSystemParticles[i].startSize = Random.Range(minStarParticleSize,maxStarParticleSize);
                 
             
         }
         
-        ps.SetParticles(GameManager.instance.starSystemParticles, GameManager.instance.starSystemParticles.Length);
+        StarSystems.SetParticles(GameManager.instance.StarSystemParticles, GameManager.instance.StarSystemParticles.Length);
         
         sw.Stop();
         Debug.Log(string.Format("Finished star generation at: {0}", sw.ElapsedMilliseconds));

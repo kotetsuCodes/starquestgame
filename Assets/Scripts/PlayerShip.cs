@@ -4,31 +4,22 @@ using UnityEngine.UI;
 
 public class PlayerShip : MonoBehaviour {
 
-    public Text fuelText;
-    public Text xCoordText;
-    public Text yCoordText;
-
-    private float fuel;
-
+    public float CurrentFuel;
+    public float CurrentFuelUsage;
     public float TurnSpeed;
     public float MaxSpeed;
     Rigidbody2D rigidBody;
     
     
     // Use this for initialization
-    void Start () {
-        
+    void Start () 
+    {
         rigidBody = GetComponent<Rigidbody2D>();
-
-        fuel = GameManager.instance.playerFuelPoints;
-
-        fuelText.text = "Fuel: " + fuel.ToString("0.00");
-        xCoordText.text = gameObject.transform.position.x.ToString("0.00");
-        yCoordText.text = gameObject.transform.position.y.ToString("0.00");
     }
 	
-    private void OnDisable(){
-        GameManager.instance.playerFuelPoints = fuel;
+    private void OnDisable()
+    {
+        //GameManager.instance.PlayerFuelPoints = fuel;
     }
     
 	// Update is called once per frame
@@ -39,27 +30,19 @@ public class PlayerShip : MonoBehaviour {
         
         if(Input.GetAxisRaw("Vertical") == 1)
         {
-            if(fuel - GameManager.instance.fuelUsage < 0.0f)
-                fuel = 0.0f;
+            if(CurrentFuel - CurrentFuelUsage < 0.0f)
+                CurrentFuel = 0.0f;
             else
             {
-                fuel -= GameManager.instance.fuelUsage;
-                rigidBody.AddForce(transform.up);
+                CurrentFuel -= CurrentFuelUsage;
+                rigidBody.AddForce(transform.up * MaxSpeed);
             }
-
-            fuelText.text = "Fuel: " + fuel.ToString("0.00");
-
-            int x = (int)(gameObject.transform.position.x * GameManager.instance.worldCoordModifier);
-            int y = (int)(gameObject.transform.position.y * GameManager.instance.worldCoordModifier);
-
-            xCoordText.text = x.ToString();
-            yCoordText.text = y.ToString();
-
         }
-        //transform.position += transform.up * Time.deltaTime * MaxSpeed;
-
     }
     
-    
+    public static Vector2 GetPlayerShipCoordsDisplayFormatted(PlayerShip playership)
+    {
+        return new Vector2((int)(playership.transform.position.x * GameManager.instance.worldCoordModifier), (int)(playership.transform.position.y * GameManager.instance.worldCoordModifier));
+    }
     
 }
