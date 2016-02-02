@@ -37,17 +37,17 @@ public class ParticleScript : MonoBehaviour {
             if(randomStar < 100)
             {
                 points[i].startColor = blueStar;
-                Debug.Log("Generating blue star");
+                //Debug.Log("Generating blue star");
             }
             else if(randomStar > 100 && randomStar < 200)
             {
                 points[i].startColor = yellowStar;
-                Debug.Log("Generating yellow star");
+                //Debug.Log("Generating yellow star");
             }
             else
             {
                 points[i].startColor = orangeStar;
-                Debug.Log("Generating orange star");
+                //Debug.Log("Generating orange star");
             }
             
             points[i].startSize = Random.Range(minStarSize,maxStarSize);
@@ -58,7 +58,7 @@ public class ParticleScript : MonoBehaviour {
 	void Update () {
 	   if(points == null)
        {
-            Debug.Log("Creating Stars");
+            //Debug.Log("Creating Stars");
             CreateStars();    
        } 
 
@@ -68,7 +68,7 @@ public class ParticleScript : MonoBehaviour {
            if(Vector3.Distance(points[i].position, GameManager.instance.playerShip.transform.position) > starRadius)
            {
                
-               Debug.Log("Star at max distance. Moving");
+               //Debug.Log("Star at max distance. Moving");
                points[i].position = new Vector3(randomVector2.x, randomVector2.y, 1.0f);
            }
        }

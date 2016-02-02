@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.IO;
 using System;
+using System.Linq;
 
 public class GameManager : MonoBehaviour {
 
@@ -17,12 +18,22 @@ public class GameManager : MonoBehaviour {
     public float worldCoordModifier = 1.00f;
     public HashSet<int> UsedStarSystemCoords = new HashSet<int>();
     public ParticleSystem.Particle[] StarSystemParticles = new ParticleSystem.Particle[1000];
-    private ParticleSystem ps;
+    //private ParticleSystem ps;
+
+    public int maxStarCount = 1000;
+    public int starRadius = 1000;
+    public float minStarSize = 0.05f;
+    public float maxStarSize = 1.0f;
+    public float minStarDistance = 1000.0f;
+
+    public GameObject BaseStarPrefab;
+    public List<GameObject> BaseStarArray = new List<GameObject>();
+    public List<Material> RandomStarMaterials = new List<Material>(3);
 
     //UI
-    Text fuelText;
-    Text xCoordText;
-    Text yCoordText;
+    public Text fuelText;
+    public Text xCoordText;
+    public Text yCoordText;
 
     // Use this for initialization
     void Awake () {
@@ -47,24 +58,84 @@ public class GameManager : MonoBehaviour {
 
         //doingSetup = true;
 
-        playerShip = GameObject.Find("Player_Ship").GetComponent<PlayerShip>();
-        
+        //Generate Star Sprites
+        for(var i = 0; i < maxStarCount; i++)
+        {
+            int materialIndex = UnityEngine.Random.Range(1, 300);
+            
+            if(materialIndex >= 1 && materialIndex < 100)
+                materialIndex = 0;
+            else if(materialIndex >= 100 && materialIndex < 200)
+                materialIndex = 1;
+            else
+                materialIndex = 2;
+            
+            Vector2 randomPosition = UnityEngine.Random.insideUnitCircle * starRadius;
 
-        fuelText = GameObject.Find("FuelText").GetComponent<Text>();
-        xCoordText = GameObject.Find("XCoord").GetComponent<Text>();
-        yCoordText = GameObject.Find("YCoord").GetComponent<Text>();
-        ps = GameObject.Find("Star Particle System").GetComponent<ParticleSystem>();
-        fuelText.text = "Fuel: " + playerShip.CurrentFuel;
+            //Debug.Log(Physics.OverlapSphere(randomPosition, minStarDistance).Length);
+
+            var colliders = Physics2D.OverlapCircleAll(randomPosition, minStarDistance);
+
+            while(colliders.Length > 0)
+            {
+                if(colliders.Length == 1)
+                {
+                    if(colliders[0].tag == "Player")
+                    {
+                        Debug.Log("Player collider found...breaking");
+                        break;
+                    }
+                }
+                
+                //Debug.Log("Star at " + randomPosition.x + "," + randomPosition.y + " is too close to another star");
+                randomPosition = UnityEngine.Random.insideUnitCircle * starRadius;
+                colliders = Physics2D.OverlapCircleAll(randomPosition, minStarDistance);
+            }            
+             
+            float randomStarSize = UnityEngine.Random.Range(minStarSize, maxStarSize);
+            
+            //example: 100 stars max. Need 5% to be large stars
+            if(BaseStarArray.Where(x => x.transform.localScale.x > 1.5).Count() < maxStarCount * 0.05 ) 
+                randomStarSize = UnityEngine.Random.Range(1.5f, maxStarSize);
+            else
+                randomStarSize = UnityEngine.Random.Range(minStarSize, 1.5f);
+
+            GameObject starSprite = (GameObject)Instantiate(BaseStarPrefab, randomPosition, Quaternion.Euler(0, 0, 0));
+
+            var spriteRenderer = starSprite.GetComponent<SpriteRenderer>();
+
+            spriteRenderer.transform.position = randomPosition;
+            spriteRenderer.material = RandomStarMaterials[materialIndex];
+
+            spriteRenderer.transform.localScale = new Vector3(randomStarSize, randomStarSize, 0.0f);
+
+            BaseStarArray.Add(starSprite);
+
+        }
+
+        foreach(var star in BaseStarArray)
+            Debug.Log(star.transform.position.x + "," + star.transform.position.y);
+
+        //playerShip = GameObject.Find("PlayerShip").GetComponent<PlayerShip>();
+
+        //fuelText = GameObject.Find("FuelText").GetComponent<Text>();
+        //xCoordText = GameObject.Find("XCoord").GetComponent<Text>();
+        //yCoordText = GameObject.Find("YCoord").GetComponent<Text>();
+        //ps = GameObject.Find("Star Particle System").GetComponent<ParticleSystem>();
+        //fuelText.GetComponent<Text>().text = "Fuel: " + playerShip.CurrentFuel;
     }
-	
-    
     
     // Update is called once per frame
 	void Update () 
     {
-        fuelText.text = "Fuel: " + playerShip.CurrentFuel.ToString("0.00");
-        xCoordText.text = PlayerShip.GetPlayerShipCoordsDisplayFormatted(playerShip).x.ToString();
-        yCoordText.text = PlayerShip.GetPlayerShipCoordsDisplayFormatted(playerShip).y.ToString();
+        fuelText.GetComponent<Text>().text = "Fuel: " + playerShip.CurrentFuel.ToString("0.00");
+        xCoordText.GetComponent<Text>().text = PlayerShip.GetPlayerShipCoordsDisplayFormatted(playerShip).x.ToString();
+        yCoordText.GetComponent<Text>().text = PlayerShip.GetPlayerShipCoordsDisplayFormatted(playerShip).y.ToString();
+
+        //Debug.Log(Vector3.Distance(new Vector3(0.0f,0.0f,0.0f), new Vector3(playerShip.transform.position.x, playerShip.transform.position.y, 0.0f)));
+
+        //Debug.Log(PlayerShip.GetPlayerShipCoordsDisplayFormatted(playerShip).x.ToString() + "," + PlayerShip.GetPlayerShipCoordsDisplayFormatted(playerShip).y.ToString());
+        //Debug.Log(playerShip.CurrentFuel);
 
         //Debug.Log("Ship Display Position: " + PlayerShip.GetPlayerShipCoordsDisplayFormatted(playerShip).x.ToString() + "," + PlayerShip.GetPlayerShipCoordsDisplayFormatted(playerShip).y.ToString());
         //Debug.Log("Ship Actual Position: " + playerShip.transform.position.x + "," + playerShip.transform.position.y);
@@ -120,7 +191,7 @@ public class GameManager : MonoBehaviour {
                     newStars[i].startColor = new Color32(sd.Stars.StarSystems[i].starColor[0], sd.Stars.StarSystems[i].starColor[1], sd.Stars.StarSystems[i].starColor[2], sd.Stars.StarSystems[i].starColor[3] );
                 }
 
-                ps.SetParticles(newStars, newStars.Length);
+                //ps.SetParticles(newStars, newStars.Length);
 
                 //StarSystemParticles = sd.StarSystemParticles;
                 //UsedStarSystemCoords = sd.UsedStarSystemCoords;
