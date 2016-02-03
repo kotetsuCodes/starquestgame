@@ -18,6 +18,7 @@ public class GameManager : MonoBehaviour {
     public float worldCoordModifier = 1.00f;
     public HashSet<int> UsedStarSystemCoords = new HashSet<int>();
     public ParticleSystem.Particle[] StarSystemParticles = new ParticleSystem.Particle[1000];
+    public BaseStarSystem CurrentStarSystem;
     //private ParticleSystem ps;
 
     public int maxStarCount = 1000;
@@ -25,6 +26,11 @@ public class GameManager : MonoBehaviour {
     public float minStarSize = 0.05f;
     public float maxStarSize = 1.0f;
     public float minStarDistance = 1000.0f;
+
+    //Planet Vars
+    public float minPlanetSize = 0.1f;
+    public float maxPlanetSize = 1.0f;
+    public List<Sprite> RandomPlanetSprites = new List<Sprite>(9);
 
     public GameObject BaseStarPrefab;
     public List<GameObject> BaseStarArray = new List<GameObject>();
@@ -82,7 +88,7 @@ public class GameManager : MonoBehaviour {
                 {
                     if(colliders[0].tag == "Player")
                     {
-                        Debug.Log("Player collider found...breaking");
+                        //Debug.Log("Player collider found...breaking");
                         break;
                     }
                 }
@@ -100,21 +106,27 @@ public class GameManager : MonoBehaviour {
             else
                 randomStarSize = UnityEngine.Random.Range(minStarSize, 1.5f);
 
-            GameObject starSprite = (GameObject)Instantiate(BaseStarPrefab, randomPosition, Quaternion.Euler(0, 0, 0));
+            GameObject starSystem = (GameObject)Instantiate(BaseStarPrefab, randomPosition, Quaternion.Euler(0, 0, 0));
 
-            var spriteRenderer = starSprite.GetComponent<SpriteRenderer>();
+            BaseStarSystem starSystemProperties = starSystem.GetComponent<BaseStarSystem>();
 
+            starSystemProperties.SizeOfStar = randomStarSize;
+            starSystemProperties.Planets = new Planet[UnityEngine.Random.Range(0, 9)];
+            
+            for(var j = 0; j < starSystemProperties.Planets.Length; j++)
+            {
+                starSystemProperties.Planets[j] = new Planet(UnityEngine.Random.Range(minPlanetSize, maxPlanetSize), new Vector3(j, j, 0.0f), RandomPlanetSprites[UnityEngine.Random.Range(0, RandomPlanetSprites.Count)], UnityEngine.Random.Range(0, 8));
+            }
+
+            //Set sprite display properties
+            var spriteRenderer = starSystem.GetComponent<SpriteRenderer>();
             spriteRenderer.transform.position = randomPosition;
             spriteRenderer.material = RandomStarMaterials[materialIndex];
-
             spriteRenderer.transform.localScale = new Vector3(randomStarSize, randomStarSize, 0.0f);
 
-            BaseStarArray.Add(starSprite);
+            BaseStarArray.Add(starSystem);
 
         }
-
-        foreach(var star in BaseStarArray)
-            Debug.Log(star.transform.position.x + "," + star.transform.position.y);
 
         //playerShip = GameObject.Find("PlayerShip").GetComponent<PlayerShip>();
 
@@ -128,9 +140,9 @@ public class GameManager : MonoBehaviour {
     // Update is called once per frame
 	void Update () 
     {
-        fuelText.GetComponent<Text>().text = "Fuel: " + playerShip.CurrentFuel.ToString("0.00");
-        xCoordText.GetComponent<Text>().text = PlayerShip.GetPlayerShipCoordsDisplayFormatted(playerShip).x.ToString();
-        yCoordText.GetComponent<Text>().text = PlayerShip.GetPlayerShipCoordsDisplayFormatted(playerShip).y.ToString();
+        //fuelText.GetComponent<Text>().text = "Fuel: " + playerShip.CurrentFuel.ToString("0.00");
+        //xCoordText.GetComponent<Text>().text = PlayerShip.GetPlayerShipCoordsDisplayFormatted(playerShip).x.ToString();
+        //yCoordText.GetComponent<Text>().text = PlayerShip.GetPlayerShipCoordsDisplayFormatted(playerShip).y.ToString();
 
         //Debug.Log(Vector3.Distance(new Vector3(0.0f,0.0f,0.0f), new Vector3(playerShip.transform.position.x, playerShip.transform.position.y, 0.0f)));
 
@@ -155,8 +167,6 @@ public class GameManager : MonoBehaviour {
             starSystemData.StarSystems[i] = starSystem;
             
         }
-        
-        Debug.Log(Application.persistentDataPath);
 
         BinaryFormatter binaryFormatter = new BinaryFormatter();
         using(FileStream fileStream = File.Create(Application.persistentDataPath + "/saveData.dat"))
@@ -185,7 +195,7 @@ public class GameManager : MonoBehaviour {
 
                 for(int i = 0; i < newStars.Length; i++)
                 {
-                    Debug.Log("Generating New Star");
+                    //Debug.Log("Generating New Star");
                     newStars[i].position = new Vector3(sd.Stars.StarSystems[i].xPos, sd.Stars.StarSystems[i].yPos, sd.Stars.StarSystems[i].zPos);
                     newStars[i].startSize = sd.Stars.StarSystems[i].starSize;
                     newStars[i].startColor = new Color32(sd.Stars.StarSystems[i].starColor[0], sd.Stars.StarSystems[i].starColor[1], sd.Stars.StarSystems[i].starColor[2], sd.Stars.StarSystems[i].starColor[3] );

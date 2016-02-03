@@ -1,6 +1,8 @@
 ﻿using UnityEngine;
 using System.Collections;
 using UnityEngine.UI;
+using System.Linq;
+using UnityEngine.SceneManagement;
 
 public class PlayerShip : MonoBehaviour {
 
@@ -21,13 +23,36 @@ public class PlayerShip : MonoBehaviour {
     {
         //GameManager.instance.PlayerFuelPoints = fuel;
     }
-    
-	// Update is called once per frame
-	void Update () 
+
+    // Update is called once per frame
+    void FixedUpdate()
     {
         transform.Rotate(0.0f, 0.0f, -Input.GetAxis("Horizontal") * TurnSpeed);
-        
-        
+
+        if(Input.GetKeyDown("space"))
+        {
+            var colliders = Physics2D.OverlapCircleAll(transform.position, GetComponent<BoxCollider2D>().size.x);
+
+            if (colliders != null && colliders.Length > 1)
+            {
+                if (colliders[1].GetComponentInParent<BaseStarSystem>() != null)
+                {
+                    Debug.Log("Number Of Planets: " + colliders[1].GetComponentInParent<BaseStarSystem>().Planets.Length);
+                    var baseStarSystem = colliders[1].GetComponentInParent<BaseStarSystem>();
+
+                    GameManager.instance.CurrentStarSystem = baseStarSystem;
+
+                    Debug.Log("base star system is null before level load: " + (GameManager.instance.CurrentStarSystem == null).ToString());
+
+                    SceneManager.LoadScene("TestStarSystem");
+
+                }
+            }
+        }
+        //if(GameManager.instance.BaseStarArray.Any(x => (int)x.transform.position.x == (int)transform.position.x && (int)x.transform.position.y == (int)transform.position.y))
+        //Debug.Log("Player ship is on star");
+        //}
+
         if(Input.GetAxisRaw("Vertical") == 1)
         {
             if(CurrentFuel - CurrentFuelUsage < 0.0f)
