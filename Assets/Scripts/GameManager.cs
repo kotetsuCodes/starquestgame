@@ -45,9 +45,19 @@ public class GameManager : MonoBehaviour {
     void Awake () {
         
 	   if(instance == null)
+       {
+            Debug.Log("GameManager instance is null");
             instance = this;
+       }
         else if(instance != this)
+        {
+            Debug.Log("GameManager instance is not this");
             Destroy(gameObject);
+        }
+        else
+        {
+            Debug.Log("GameManager instane is this");
+        }
 
         DontDestroyOnLoad(gameObject);
 
@@ -57,6 +67,7 @@ public class GameManager : MonoBehaviour {
 	
     void InitGame()
     {
+        //Debug.Log("Beginning Init Game");
         //foreach(var starSystem in starSystemCoords)
         //Debug.Log(starSystem.x + "," + starSystem.y);
 
@@ -115,7 +126,7 @@ public class GameManager : MonoBehaviour {
             
             for(var j = 0; j < starSystemProperties.Planets.Length; j++)
             {
-                starSystemProperties.Planets[j] = new Planet(UnityEngine.Random.Range(minPlanetSize, maxPlanetSize), new Vector3(j, j, 0.0f), RandomPlanetSprites[UnityEngine.Random.Range(0, RandomPlanetSprites.Count)], UnityEngine.Random.Range(0, 8));
+                starSystemProperties.Planets[j] = new Planet (UnityEngine.Random.Range(minPlanetSize, maxPlanetSize), new Vector3(j, j, 0.0f), RandomPlanetSprites[UnityEngine.Random.Range(0, RandomPlanetSprites.Count)], UnityEngine.Random.Range(0, 8));
             }
 
             //Set sprite display properties
@@ -140,9 +151,9 @@ public class GameManager : MonoBehaviour {
     // Update is called once per frame
 	void Update () 
     {
-        //fuelText.GetComponent<Text>().text = "Fuel: " + playerShip.CurrentFuel.ToString("0.00");
-        //xCoordText.GetComponent<Text>().text = PlayerShip.GetPlayerShipCoordsDisplayFormatted(playerShip).x.ToString();
-        //yCoordText.GetComponent<Text>().text = PlayerShip.GetPlayerShipCoordsDisplayFormatted(playerShip).y.ToString();
+        fuelText.GetComponent<Text>().text = "Fuel: " + playerShip.CurrentFuel.ToString("0.00");
+        xCoordText.GetComponent<Text>().text = PlayerShip.GetPlayerShipCoordsDisplayFormatted(playerShip).x.ToString();
+        yCoordText.GetComponent<Text>().text = PlayerShip.GetPlayerShipCoordsDisplayFormatted(playerShip).y.ToString();
 
         //Debug.Log(Vector3.Distance(new Vector3(0.0f,0.0f,0.0f), new Vector3(playerShip.transform.position.x, playerShip.transform.position.y, 0.0f)));
 
