@@ -11,6 +11,11 @@ public class CameraMovement : MonoBehaviour {
         camera = GetComponent<Camera>();
     }
 	
+    void Awake()
+    {
+        DontDestroyOnLoad(gameObject);
+    }
+    
 	// Update is called once per frame
 	void Update () {
         if(target)

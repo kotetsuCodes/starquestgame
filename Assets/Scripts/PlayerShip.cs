@@ -6,10 +6,15 @@ using UnityEngine.SceneManagement;
 
 public class PlayerShip : MonoBehaviour {
 
-    public float CurrentFuel;
-    public float CurrentFuelUsage;
-    public float TurnSpeed;
-    public float MaxSpeed;
+    public float BaseFuelLevel = 10000;
+    public float BaseFuelUsage = 0.75f;
+    public float BaseTurnSpeed = 1.25f;
+    public float BaseMaxSpeed = 2.0f;
+
+    public float CurrentFuelLevel = 10000;
+    public float CurrentFuelUsage = 0.75f;
+    public float CurrentTurnSpeed = 1.25f;
+    public float CurrentMaxSpeed = 2.0f;
     Rigidbody2D rigidBody;
     
     
@@ -19,6 +24,11 @@ public class PlayerShip : MonoBehaviour {
         rigidBody = GetComponent<Rigidbody2D>();
     }
 	
+    void Awake() 
+    {
+        DontDestroyOnLoad(gameObject);
+    }
+    
     private void OnDisable()
     {
         //GameManager.instance.PlayerFuelPoints = fuel;
@@ -27,7 +37,7 @@ public class PlayerShip : MonoBehaviour {
     // Update is called once per frame
     void FixedUpdate()
     {
-        transform.Rotate(0.0f, 0.0f, -Input.GetAxis("Horizontal") * TurnSpeed);
+        transform.Rotate(0.0f, 0.0f, -Input.GetAxis("Horizontal") * BaseTurnSpeed);
 
         if(Input.GetKeyDown("space"))
         {
@@ -55,19 +65,19 @@ public class PlayerShip : MonoBehaviour {
 
         if(Input.GetAxisRaw("Vertical") == 1)
         {
-            if(CurrentFuel - CurrentFuelUsage < 0.0f)
-                CurrentFuel = 0.0f;
+            if(CurrentFuelLevel - CurrentFuelUsage < 0.0f)
+                CurrentFuelLevel = 0.0f;
             else
             {
-                CurrentFuel -= CurrentFuelUsage;
-                rigidBody.AddForce(transform.up * MaxSpeed);
+                CurrentFuelLevel -= CurrentFuelUsage;
+                rigidBody.AddForce(transform.up * BaseMaxSpeed);
             }
         }
     }
     
     public static Vector2 GetPlayerShipCoordsDisplayFormatted(PlayerShip playership)
     {
-        return new Vector2((int)(playership.transform.position.x * GameManager.instance.worldCoordModifier), (int)(playership.transform.position.y * GameManager.instance.worldCoordModifier));
+        return new Vector2((int)(playership.transform.position.x * GameManager.instance.GalacticCoordModifier), (int)(playership.transform.position.y * GameManager.instance.GalacticCoordModifier));
     }
     
 }

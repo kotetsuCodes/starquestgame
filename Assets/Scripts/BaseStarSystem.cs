@@ -4,6 +4,11 @@ using System.Collections;
 public class BaseStarSystem : MonoBehaviour
 {
     public float SizeOfStar;
-    public Planet[] Planets;
+    public GameObject[] Planets;
+
+    void Awake()
+    {
+        DontDestroyOnLoad(gameObject);
+    }
 
 }
