@@ -7,7 +7,8 @@ using System.IO;
 using System;
 using System.Linq;
 
-public class GameManager : MonoBehaviour {
+public class GameManager : MonoBehaviour
+{
 
     //private Text fuelText;
 
@@ -26,6 +27,7 @@ public class GameManager : MonoBehaviour {
     public float minStarSize = 0.05f;
     public float maxStarSize = 1.0f;
     public float minStarDistance = 1000.0f;
+    public float largeStarPercentage = 0.05f;
 
     //Planet Vars
     public float minPlanetSize = 0.1f;
@@ -43,14 +45,15 @@ public class GameManager : MonoBehaviour {
     public Text yCoordText;
 
     // Use this for initialization
-    void Awake () {
-        
-	   if(instance == null)
-       {
+    void Awake()
+    {
+
+        if (instance == null)
+        {
             Debug.Log("GameManager instance is null");
             instance = this;
-       }
-        else if(instance != this)
+        }
+        else if (instance != this)
         {
             Debug.Log("GameManager instance is not this");
             Destroy(gameObject);
@@ -65,7 +68,7 @@ public class GameManager : MonoBehaviour {
         InitGame();
 
     }
-    
+
     void InitGame()
     {
         //Debug.Log("Beginning Init Game");
@@ -80,20 +83,18 @@ public class GameManager : MonoBehaviour {
 
         //Generate Star Sprites
         BaseStarArray = generateStars(maxStarCount);
-        
-        
-        
+
+
+
     }
 
     private GameObject[] generateStars(int numberOfStars)
     {
-        GameObject[] stars = new GameObject[numberOfStars];
+        List<GameObject> stars = new List<GameObject>();
 
 
-        for(var i = 0; i < numberOfStars; i++)
+        for (var i = 0; i < numberOfStars; i++)
         {
-            Debug.Log("stars[i] is null: " + (stars[i] == null));
-
             Debug.Log("Stars count: " + stars.Count());
 
             int materialIndex = UnityEngine.Random.Range(1, 300);
@@ -106,78 +107,53 @@ public class GameManager : MonoBehaviour {
                 materialIndex = 2;
 
             Vector2 randomPosition = UnityEngine.Random.insideUnitCircle * starRadius;
-
-            //Debug.Log(Physics.OverlapSphere(randomPosition, minStarDistance).Length);
-
-            var colliders = Physics2D.OverlapCircleAll(randomPosition, minStarDistance);
+            Collider2D[] colliders = Physics2D.OverlapCircleAll(randomPosition, minStarDistance);
 
             while (colliders.Length > 0)
             {
-                if (colliders.Length == 1)
-                {
-                    if (colliders[0].tag == "Player")
-                    {
-                        //Debug.Log("Player collider found...breaking");
-                        break;
-                    }
-                }
+                if (colliders.Length == 1 && colliders[0].tag == "Player")
+                    break;
 
-                //Debug.Log("Star at " + randomPosition.x + "," + randomPosition.y + " is too close to another star");
                 randomPosition = UnityEngine.Random.insideUnitCircle * starRadius;
                 colliders = Physics2D.OverlapCircleAll(randomPosition, minStarDistance);
             }
 
-            //Just for testing
-            //if (i == 0)
-            //    randomPosition = new Vector2(0.0f, 0.0f);
-
             float randomStarSize = UnityEngine.Random.Range(minStarSize, maxStarSize);
 
             //example: 100 stars max. Need 5% to be large stars
-
-            Debug.Log("Currently generated star count: " + stars.Count());
-
-            if(i == 0)
-            {
-                Debug.Log("i is 0! " + i);
-                randomStarSize = UnityEngine.Random.Range(minStarSize, 1.5f);
-            }
+            if (stars.Where(s => s.transform.localScale.x > 1.5).Count() < maxStarCount * largeStarPercentage)
+                randomStarSize = UnityEngine.Random.Range(1.5f, maxStarSize);
             else
-            {
-                Debug.Log("i is not 0 " + i);
-                if (stars.Where(x => x.transform.localScale.x > 1.5).Count() < maxStarCount * 0.05)
-                    randomStarSize = UnityEngine.Random.Range(1.5f, maxStarSize);
-                else
-                    randomStarSize = UnityEngine.Random.Range(minStarSize, 1.5f);
-            }
+                randomStarSize = UnityEngine.Random.Range(minStarSize, 1.5f);
 
             GameObject starSystem = (GameObject)Instantiate(BaseStarPrefab, randomPosition, Quaternion.Euler(0, 0, 0));
-
             BaseStarSystem starSystemProperties = starSystem.GetComponent<BaseStarSystem>();
 
             starSystemProperties.SizeOfStar = randomStarSize;
             starSystemProperties.Planets = generatePlanets(UnityEngine.Random.Range(0, 9));
 
             //Set sprite display properties
-            var spriteRenderer = starSystem.GetComponent<SpriteRenderer>();
-            spriteRenderer.transform.position = randomPosition;
-            spriteRenderer.material = RandomStarMaterials[materialIndex];
-            spriteRenderer.transform.localScale = new Vector3(randomStarSize, randomStarSize, 0.0f);
+            setStarDisplay(materialIndex, randomPosition, randomStarSize, starSystem);
 
-            stars[i] = starSystem;
-
-            Debug.Log(i);
-
+            stars.Add(starSystem);
         }
-        
-        return stars;
+
+        return stars.ToArray();
+    }
+
+    private void setStarDisplay(int materialIndex, Vector2 randomPosition, float randomStarSize, GameObject starSystem)
+    {
+        SpriteRenderer spriteRenderer = starSystem.GetComponent<SpriteRenderer>();
+        spriteRenderer.transform.position = randomPosition;
+        spriteRenderer.material = RandomStarMaterials[materialIndex];
+        spriteRenderer.transform.localScale = new Vector3(randomStarSize, randomStarSize, 0.0f);
     }
 
     private GameObject[] generatePlanets(int numberOfPlanets)
     {
         var planets = new GameObject[numberOfPlanets];
-        
-        for(var i = 0; i < numberOfPlanets; i++)
+
+        for (var i = 0; i < numberOfPlanets; i++)
         {
             var p = new GameObject();
 
@@ -190,19 +166,19 @@ public class GameManager : MonoBehaviour {
             planetObj.PlanetSprite = RandomPlanetSprites[UnityEngine.Random.Range(0, RandomPlanetSprites.Count)];
 
             planets[i] = p;
-
         }
+
         return planets;
     }
 
     void OnLevelWasLoaded(int level)
     {
         //If loading star system view
-        if(level == 1)
+        if (level == 1)
         {
             playerShip.CurrentFuelUsage -= 0.50f;
 
-            foreach(var planet in GameManager.instance.CurrentStarSystem.Planets)
+            foreach (var planet in GameManager.instance.CurrentStarSystem.Planets)
             {
                 var p = planet.GetComponent<Planet>();
 
@@ -210,52 +186,41 @@ public class GameManager : MonoBehaviour {
                 planetObj.GetComponent<SpriteRenderer>().sprite = p.PlanetSprite;
             }
         }
-        else if(level == 0)
+        else if (level == 0)
         {
             playerShip.CurrentFuelUsage = playerShip.BaseFuelUsage;
         }
     }
-    
+
     // Update is called once per frame
-	void Update () 
+    void Update()
     {
         fuelText.GetComponent<Text>().text = "Fuel: " + playerShip.CurrentFuelLevel.ToString("0.00");
         xCoordText.GetComponent<Text>().text = PlayerShip.GetPlayerShipCoordsDisplayFormatted(playerShip).x.ToString();
         yCoordText.GetComponent<Text>().text = PlayerShip.GetPlayerShipCoordsDisplayFormatted(playerShip).y.ToString();
-
-        //Debug.Log(Vector3.Distance(new Vector3(0.0f,0.0f,0.0f), new Vector3(playerShip.transform.position.x, playerShip.transform.position.y, 0.0f)));
-
-        //Debug.Log(PlayerShip.GetPlayerShipCoordsDisplayFormatted(playerShip).x.ToString() + "," + PlayerShip.GetPlayerShipCoordsDisplayFormatted(playerShip).y.ToString());
-        //Debug.Log(playerShip.CurrentFuel);
-
-        //Debug.Log("Ship Display Position: " + PlayerShip.GetPlayerShipCoordsDisplayFormatted(playerShip).x.ToString() + "," + PlayerShip.GetPlayerShipCoordsDisplayFormatted(playerShip).y.ToString());
-        //Debug.Log("Ship Actual Position: " + playerShip.transform.position.x + "," + playerShip.transform.position.y);
-        //Debug.Log("Player Fuel: " + playerShip.CurrentFuel);
     }
-    
+
     public void Save()
     {
         var starSystems = new SingleStarSystem[1000];
         var starSystemData = new StarSystemData(starSystems);
-    
+
         for (int i = 0; i < StarSystemParticles.Length; i++)
         {
-            
             var star = StarSystemParticles[i];
-            var starSystem = new SingleStarSystem(star.position.x, star.position.y, star.position.z, star.startSize, new byte[] {star.startColor.r, star.startColor.g, star.startColor.b, star.startColor.a });
+            var starSystem = new SingleStarSystem(star.position.x, star.position.y, star.position.z, star.startSize, new byte[] { star.startColor.r, star.startColor.g, star.startColor.b, star.startColor.a });
             starSystemData.StarSystems[i] = starSystem;
-            
         }
 
         BinaryFormatter binaryFormatter = new BinaryFormatter();
-        using(FileStream fileStream = File.Create(Application.persistentDataPath + "/saveData.dat"))
+        using (FileStream fileStream = File.Create(Application.persistentDataPath + "/saveData.dat"))
         {
             saveData sd = new saveData(playerShip.transform.position.x, playerShip.transform.position.y, playerShip.CurrentFuelLevel, starSystemData, UsedStarSystemCoords);
-            binaryFormatter.Serialize(fileStream, sd);    
+            binaryFormatter.Serialize(fileStream, sd);
         }
 
     }
-    
+
     public void Load()
     {
         if (File.Exists(Application.persistentDataPath + "/saveData.dat"))
@@ -272,12 +237,12 @@ public class GameManager : MonoBehaviour {
 
                 var newStars = new ParticleSystem.Particle[1000];
 
-                for(int i = 0; i < newStars.Length; i++)
+                for (int i = 0; i < newStars.Length; i++)
                 {
                     //Debug.Log("Generating New Star");
                     newStars[i].position = new Vector3(sd.Stars.StarSystems[i].xPos, sd.Stars.StarSystems[i].yPos, sd.Stars.StarSystems[i].zPos);
                     newStars[i].startSize = sd.Stars.StarSystems[i].starSize;
-                    newStars[i].startColor = new Color32(sd.Stars.StarSystems[i].starColor[0], sd.Stars.StarSystems[i].starColor[1], sd.Stars.StarSystems[i].starColor[2], sd.Stars.StarSystems[i].starColor[3] );
+                    newStars[i].startColor = new Color32(sd.Stars.StarSystems[i].starColor[0], sd.Stars.StarSystems[i].starColor[1], sd.Stars.StarSystems[i].starColor[2], sd.Stars.StarSystems[i].starColor[3]);
                 }
 
                 //ps.SetParticles(newStars, newStars.Length);
@@ -288,8 +253,8 @@ public class GameManager : MonoBehaviour {
             }
         }
     }
-    
-    
+
+
 }
 
 [Serializable]
@@ -325,7 +290,7 @@ public class StarSystemData
         this.StarSystems = starSystems;
     }
 
-    public SingleStarSystem[] StarSystems { get; private set;}
+    public SingleStarSystem[] StarSystems { get; private set; }
 }
 
 [Serializable]
