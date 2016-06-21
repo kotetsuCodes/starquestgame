@@ -176,6 +176,9 @@ public class GameManager : MonoBehaviour
         //If loading star system view
         if (level == 1)
         {
+            foreach(var star in GameManager.instance.BaseStarArray)
+                star.SetActive(false);
+            
             playerShip.CurrentFuelUsage -= 0.50f;
 
             foreach (var planet in GameManager.instance.CurrentStarSystem.Planets)
