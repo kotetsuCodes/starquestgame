@@ -6,6 +6,7 @@ using System.Runtime.Serialization.Formatters.Binary;
 using System.IO;
 using System;
 using System.Linq;
+using UnityEngine.SceneManagement;
 
 public class GameManager : MonoBehaviour
 {
@@ -95,8 +96,6 @@ public class GameManager : MonoBehaviour
 
         for (var i = 0; i < numberOfStars; i++)
         {
-            Debug.Log("Stars count: " + stars.Count());
-
             int materialIndex = UnityEngine.Random.Range(1, 300);
 
             if (materialIndex >= 1 && materialIndex < 100)
@@ -176,7 +175,7 @@ public class GameManager : MonoBehaviour
         //If loading star system view
         if (level == 1)
         {
-            foreach(var star in GameManager.instance.BaseStarArray)
+            foreach (var star in GameManager.instance.BaseStarArray)
                 star.SetActive(false);
             
             playerShip.CurrentFuelUsage -= 0.50f;
@@ -194,7 +193,7 @@ public class GameManager : MonoBehaviour
             playerShip.CurrentFuelUsage = playerShip.BaseFuelUsage;
         }
     }
-
+    
     // Update is called once per frame
     void Update()
     {

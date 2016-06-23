@@ -47,22 +47,16 @@ public class PlayerShip : MonoBehaviour {
             {
                 if (colliders[1].GetComponentInParent<BaseStarSystem>() != null)
                 {
-                    Debug.Log("Number Of Planets: " + colliders[1].GetComponentInParent<BaseStarSystem>().Planets.Length);
+                    Debug.Log("player is in range of planet");
                     var baseStarSystem = colliders[1].GetComponentInParent<BaseStarSystem>();
-
                     GameManager.instance.CurrentStarSystem = baseStarSystem;
 
-                    Debug.Log("base star system is null before level load: " + (GameManager.instance.CurrentStarSystem == null).ToString());
-
-                    SceneManager.LoadScene("TestStarSystem");
+                    StartCoroutine(ChangeLevel());
 
                 }
             }
         }
-        //if(GameManager.instance.BaseStarArray.Any(x => (int)x.transform.position.x == (int)transform.position.x && (int)x.transform.position.y == (int)transform.position.y))
-        //Debug.Log("Player ship is on star");
-        //}
-
+        
         if(Input.GetAxisRaw("Vertical") == 1)
         {
             if(CurrentFuelLevel - CurrentFuelUsage < 0.0f)
@@ -75,6 +69,14 @@ public class PlayerShip : MonoBehaviour {
         }
     }
     
+    IEnumerator ChangeLevel()
+    {
+        float fadeTime = GameManager.instance.GetComponent<Assets.Scripts.UI.ScreenFade>().BeginFade(1);
+        yield return new WaitForSeconds(fadeTime);
+
+        SceneManager.LoadScene("TestStarSystem");
+    }
+
     public static Vector2 GetPlayerShipCoordsDisplayFormatted(PlayerShip playership)
     {
         return new Vector2((int)(playership.transform.position.x * GameManager.instance.GalacticCoordModifier), (int)(playership.transform.position.y * GameManager.instance.GalacticCoordModifier));
