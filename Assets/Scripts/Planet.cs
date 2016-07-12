@@ -13,4 +13,9 @@ public class Planet : MonoBehaviour
         DontDestroyOnLoad(gameObject);
     }
 
+    void Update()
+    {
+        //Debug.Log("Orbiting planets...");
+        
+    }
 }

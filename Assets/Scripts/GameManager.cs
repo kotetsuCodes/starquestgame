@@ -129,7 +129,8 @@ public class GameManager : MonoBehaviour
             BaseStarSystem starSystemProperties = starSystem.GetComponent<BaseStarSystem>();
 
             starSystemProperties.SizeOfStar = randomStarSize;
-            starSystemProperties.Planets = generatePlanets(UnityEngine.Random.Range(0, 9));
+            //starSystemProperties.Planets = generatePlanets(UnityEngine.Random.Range(0, 9));
+            starSystemProperties.Planets = generatePlanets(1);
 
             //Set sprite display properties
             setStarDisplay(materialIndex, randomPosition, randomStarSize, starSystem);
@@ -161,7 +162,10 @@ public class GameManager : MonoBehaviour
 
             planetObj.NumberOfCities = UnityEngine.Random.Range(0, 8);
             planetObj.PlanetSize = UnityEngine.Random.Range(minPlanetSize, maxPlanetSize);
-            planetObj.PlanetLocation = new Vector3(i * 10, i * 10, 0.0f);
+
+            var previousPlanetLocation = i > 0 ? planets[i - 1].GetComponent<Planet>().PlanetLocation : new Vector3(0,0,0);
+
+            planetObj.PlanetLocation = new Vector3((UnityEngine.Random.value * 50), (UnityEngine.Random.value * 50) + previousPlanetLocation.y, 0.0f);
             planetObj.PlanetSprite = RandomPlanetSprites[UnityEngine.Random.Range(0, RandomPlanetSprites.Count)];
 
             planets[i] = p;
